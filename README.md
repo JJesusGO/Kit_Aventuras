@@ -1,7 +1,4 @@
-# Kit_Aventuras
-
- 
- # Kit Aventuras
+# Kit Aventuras
 
 - Este es el un  Kit que permite crear un videojuego de aventuras utilizando [Unity](https://unity.com/es)
 
