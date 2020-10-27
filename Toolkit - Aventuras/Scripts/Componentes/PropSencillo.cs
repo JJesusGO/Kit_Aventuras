@@ -3,9 +3,9 @@ using System.Collections;
 
 namespace Aventuras{
 
-    public abstract class Extension : MonoBehaviour{
-
-        protected virtual void Awake(){
+    public class PropSencillo : Prop{
+    
+        public override void Generacion(){
             
         }
     

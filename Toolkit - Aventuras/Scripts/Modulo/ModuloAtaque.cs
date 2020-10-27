@@ -1,14 +1,17 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 using System;
 using System.Collections;
 
 namespace Aventuras{
 
+    public delegate void AtaqueEvento(AtaqueInformacion info,ModuloAtaque ataque);
 
     public enum   AtaqueObjetivo{
         ALIADO, ENEMIGO, AMBOS
     }
     public struct AtaqueInformacion{
+       
         private PerfilAtaque perfil;
         private float ataquebasico;
         private Entidad entidad,entidadatacada;
@@ -35,54 +38,20 @@ namespace Aventuras{
 
     }
 
-    public delegate void AtaqueEvento(AtaqueInformacion info,ModuloAtaque ataque);
-
-    [System.Serializable]
-    public class PerfilAtaque{
-        
-        [SerializeField]
-        private string nombre = "Desconocido";
-        [SerializeField]
-        private Colision []colisiones = null;
-        [SerializeField]
-        private AtaqueObjetivo objetivo = AtaqueObjetivo.AMBOS;
-        [Range(0,1)]
-        [SerializeField]
-        private float ataquebasico = 1.0f;
-
-        public void Start(ColisionEvento evento){
-            for(int i=0;i<colisiones.Length;i++)
-                colisiones[i].AddColisionEvento(evento);
-        }
-                                        
-        public float GetAtaqueBasico(){
-            return ataquebasico;
-        }
-        public AtaqueObjetivo GetObjetivo(){
-            return objetivo;
-        }
-        public string GetNombre(){
-            return nombre;
-        }
-
-        public bool IsColision(Colision colision){
-            for (int i = 0; i < colisiones.Length; i++)
-                if (colision == colisiones[i])
-                    return true;
-            return false;
-            
-        }
-    }
-   
     [System.Serializable]
     public class ModuloAtaque : EntidadModulo{
 
-        [Header("Ataque - Base")]
+        [Header("Configuracion")]
         [SerializeField]
         private float ataque = 0.0f;
+        [SerializeField]
+        private AtaqueObjetivo objetivo = AtaqueObjetivo.AMBOS;
         [Header("Perfiles de ataque")]
         [SerializeField]
         private PerfilAtaque[] perfiles = null;
+        [Header("Eventos")]
+        [SerializeField]
+        private UnityEvent eventoataque = new UnityEvent();
 
         private ManagerGameplay game = null;
         private event AtaqueEvento ataqueevento;
@@ -90,9 +59,15 @@ namespace Aventuras{
         public override void Start(){
             base.Start();
             game = ManagerGameplay.GetInstancia();
-            for (int i = 0; i < perfiles.Length; i++)
-                perfiles[i].Start(EventoColision);
+            if(perfiles!=null)
+                for (int i = 0; i < perfiles.Length; i++)
+                    perfiles[i].SetEvento(EventoColision);
+        }
 
+        private void SolicitarEvento(AtaqueInformacion info){
+            if (ataqueevento != null)
+                ataqueevento(info,this);
+            eventoataque.Invoke();
         }
 
         public void AddAtaqueEvento(AtaqueEvento evento) {
@@ -108,28 +83,26 @@ namespace Aventuras{
             }
 
         }
-            
-        private void SolicitarEvento(AtaqueInformacion info){
-            if (ataqueevento != null)
-                ataqueevento(info,this);
-        }
 
+        public void  SetAtaque(float ataque){
+            this.ataque = ataque;
+            if (this.ataque < 0)
+                this.ataque = 0;
+        }
         public void  ModAtaque(float mod){
-            ataque += mod;
-            if (ataque < 0)
-                ataque = 0;
+            SetAtaque(ataque + mod);
         }                             
+       
         public float GetAtaque(PerfilAtaque perfil = null){
             float a = GetAtaqueBase();           
             if (perfil != null)
-                a *= perfil.GetAtaqueBasico();
+                a *= perfil.GetMultiplicador();
             return a;
         }
         public float GetAtaqueBase(){
             return ataque;
         }
-
-
+            
         public PerfilAtaque GetPerfil(Colision colision){
             for (int i = 0; i < perfiles.Length; i++)
                 if (perfiles[i].IsColision(colision))
@@ -141,8 +114,11 @@ namespace Aventuras{
         }
         public int          GetPerfilesCount(){
             return perfiles.Length;
-        }
+        }            
 
+        public AtaqueObjetivo GetObjetivo(){
+            return objetivo;
+        }
 
         private void EventoColision(ColisionInformacion info){
 
@@ -158,35 +134,32 @@ namespace Aventuras{
             PerfilAtaque perfil = GetPerfil(info.GetColision());
             if (perfil == null)
                 return;
-
-            switch(perfil.GetObjetivo()){
+                         
+            switch(GetObjetivo()){
                 case AtaqueObjetivo.ALIADO:
 
-                    if (entidad.GetTipo() == EntidadTipo.ALIADO)
-                    {
-
- 
+                    if (entidad.GetTipo() == EntidadTipo.ALIADO){                        
                         SolicitarEvento(new AtaqueInformacion(
                                 perfil,
                                 GetAtaque(perfil),
                                 GetEntidad(),
                                 entidad
                             ));
-                        vitalidad.AddDaño(GetAtaque(perfil),entidad, info.GetColisionImpacto());
+                        vitalidad.AddDanio(GetAtaque(perfil),entidad, info.GetColisionImpacto());
                     }
 
                     break;
                 case AtaqueObjetivo.ENEMIGO:
 
                     if (entidad.GetTipo() == EntidadTipo.ENEMIGO){
-                        
+                        Debug.Log("ATAQUE");
                         SolicitarEvento(new AtaqueInformacion(
                             perfil,
                             GetAtaque(perfil),
                             GetEntidad(),
                             entidad
                         ));
-                        vitalidad.AddDaño(GetAtaque(perfil),entidad, info.GetColisionImpacto());
+                        vitalidad.AddDanio(GetAtaque(perfil),entidad, info.GetColisionImpacto());
                     }
 
                     break;
@@ -200,7 +173,7 @@ namespace Aventuras{
                             GetEntidad(),
                             entidad
                         ));
-                        vitalidad.AddDaño(GetAtaque(perfil),entidad, info.GetColisionImpacto());
+                        vitalidad.AddDanio(GetAtaque(perfil),entidad, info.GetColisionImpacto());
 
                     }
 

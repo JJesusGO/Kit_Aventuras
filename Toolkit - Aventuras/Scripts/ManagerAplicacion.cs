@@ -24,31 +24,25 @@ namespace Aventuras{
 
     public class ManagerAplicacion : MonoBehaviour{
 
-        [Header("Data")]
-        [SerializeField]
-        private Guardado informacionprefab = null;
         [Header("Audio")]
         [SerializeField]
         private AudioPerfil []perfiles = null;
         [SerializeField]
         private ClipPerfil[] clips = null;
+        [Header("Eventos")]
+        [SerializeField]
+        private UnityEvent eventoinicio = null;
 
-        public static ManagerAplicacion instanciabase;
+        public static ManagerAplicacion instancia;
 
         private void Awake(){
-
-            instanciabase = this;
+            instancia = this;        
         
-            if(informacionprefab != null)
-            if (Guardado.GetInstancia() == null){
-                
-                Guardado info = Instantiate(informacionprefab.gameObject).GetComponent<Guardado>();
-                info.Cargar();
-                DontDestroyOnLoad(info.gameObject);
-
-            }
-
         }
+        private void Start(){
+            eventoinicio.Invoke();
+        }
+
             
         public void PlayAudio(string perfil, AudioClip clip, Vector3 posicion)
         {
@@ -63,10 +57,10 @@ namespace Aventuras{
             audio.Create(clip,perfiles[perfil].carpeta,posicion);
         }
 
-        public static ManagerAplicacion GetInstanciaBase(){
-            if (instanciabase == null)
-                instanciabase = GameObject.FindObjectOfType<ManagerAplicacion>();
-            return instanciabase;
+        public static ManagerAplicacion GetInstancia(){
+            if (instancia == null)
+                instancia = GameObject.FindObjectOfType<ManagerAplicacion>();
+            return instancia;
         }
 
 

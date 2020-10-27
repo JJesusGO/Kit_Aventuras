@@ -1,25 +1,28 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 using System;
 using System.Collections;
 
 namespace Aventuras{
 
+    public delegate void VitalidadEvento(VitalidadInformacion info,ModuloVitalidad vitalidad);
+
     public enum   VitalidadTipo{
-        DAÑO,CARGAS
+        DAÑO, CARGAS, MODMETA, SETMETA, MODMETAATAQUE, SETMETAATAQUE
     }
     public enum   VitalidadEventoTipo{
-        PREDAÑO,DAÑO
+        PREEFECTO,EFECTO
     }
     public struct VitalidadInformacion{
 
         private PerfilVitalidad perfil;
-        private float daño;
+        private float efecto;
         private VitalidadEventoTipo tipo;
         private Entidad entidadatacante;
 
-        public VitalidadInformacion(PerfilVitalidad perfil,float ataque,Entidad entidadatacante,VitalidadEventoTipo tipo){
+        public VitalidadInformacion(PerfilVitalidad perfil,float efecto,Entidad entidadatacante,VitalidadEventoTipo tipo){
             this.perfil = perfil;
-            this.daño = ataque;
+            this.efecto = efecto;
             this.entidadatacante = entidadatacante;
             this.tipo = tipo;
         }
@@ -27,8 +30,8 @@ namespace Aventuras{
         public PerfilVitalidad GetPerfil(){
             return perfil;
         }
-        public float GetDaño(){
-            return daño;
+        public float GetEfecto(){
+            return efecto;
         }
         public VitalidadEventoTipo GetTipo(){
             return tipo;
@@ -38,26 +41,30 @@ namespace Aventuras{
         }
 
     }
-  
-    public delegate void VitalidadEvento(VitalidadInformacion info,ModuloVitalidad vitalidad);
-
+        
     [System.Serializable]
     public class PerfilVitalidad{
        
-
         [SerializeField]
         private Colision []colisiones = null;
+        [SerializeField]
+        private VitalidadTipo tipo = VitalidadTipo.DAÑO; 
         [SerializeField]
         private float vida = 100.0f;
         [SerializeField]
         private float vidamaxima = 100.0f;
+        [Header("Seccion - Meta")]
         [SerializeField]
-        private VitalidadTipo tipo = VitalidadTipo.DAÑO; 
-        [Header("Daño")]
+        private string metanombre = "Desconocido";
+        [SerializeField]
+        private string metavalor = "-1";
+        [SerializeField]
+        private float metamultiplicador = 1.0f;
+        [Header("Seccion - Daño")]
         [Range(0.0f,1.0f)]
         [SerializeField]
         private float reducciondaño = 0.0f;
-        [Header("Cargas")]
+        [Header("Seccion - Cargas")]
         [SerializeField]
         private int cargasporimpacto = 1;
 
@@ -74,6 +81,9 @@ namespace Aventuras{
             if (tipo == VitalidadTipo.CARGAS)
                 vida = (float)Math.Floor(vida);                        
             vida = Mathf.Clamp(vida, 0, vidamaxima);
+        }
+        public void ResetVida(){
+            SetVida(GetVidaMaxima());
         }
 
         public void ModVidaMaxima(float valor){
@@ -97,6 +107,16 @@ namespace Aventuras{
             reducciondaño = Mathf.Clamp(reducciondaño, 0, 1);
         }
          
+        public string GetMetaNombre(){
+            return metanombre;
+        }
+        public string GetMetaValor(){
+            return metavalor;
+        }
+        public float  GetMetaMultiplicador(){
+            return metamultiplicador;
+        }
+            
         public float GetVida(bool relativa = false){
             if (relativa)
                 return vida / vidamaxima;
@@ -130,6 +150,8 @@ namespace Aventuras{
 
         [SerializeField]
         private PerfilVitalidad perfilvitalidad =null;
+        [Header("Eventos")]
+        private UnityEvent eventoefecto = new UnityEvent();
 
         private event VitalidadEvento vitalidadevento = null;
 
@@ -138,32 +160,70 @@ namespace Aventuras{
             perfilvitalidad.Start();
         }
 
-        public void AddDaño(float ataquebasico,Entidad entidad,Colision colision){
+        public void AddDanio(float ataquebasico,Entidad entidad,Colision colision){
             if (!IsEnable())
                 return;                        
 
             if (perfilvitalidad.IsColision(colision)){
-            ;
 
-                    float daño = ataquebasico;
-                    daño -= daño * perfilvitalidad.GetReduccionDaño(); 
+                float efecto = ataquebasico;
+                    efecto -= efecto * perfilvitalidad.GetReduccionDaño(); 
                     if (perfilvitalidad.GetTipo() == VitalidadTipo.CARGAS)
-                        daño = perfilvitalidad.GetCargas();
+                        efecto = perfilvitalidad.GetCargas();
 
-                    SolicitarVitalidadEvento(new VitalidadInformacion(perfilvitalidad, 
-                        daño,
-                        entidad,
-                        VitalidadEventoTipo.PREDAÑO));    
 
-                    if (IsEnable())
-                        perfilvitalidad.ModVida(-daño);
+                    if (IsEnable()){
+                        switch(perfilvitalidad.GetTipo()){
+                        case VitalidadTipo.DAÑO:
+                        case VitalidadTipo.CARGAS:
+                            SolicitarVitalidadEvento(new VitalidadInformacion(perfilvitalidad, 
+                                efecto,
+                                entidad,
+                                VitalidadEventoTipo.PREEFECTO));        
+                            perfilvitalidad.ModVida(-efecto);                                
+                            break;
+                        case VitalidadTipo.MODMETA:
+                            efecto = float.Parse(perfilvitalidad.GetMetaValor());
+                            SolicitarVitalidadEvento(new VitalidadInformacion(perfilvitalidad, 
+                                    efecto,
+                                    entidad,
+                                    VitalidadEventoTipo.PREEFECTO));                              
+                            GetEntidad().ModMetadato(perfilvitalidad.GetMetaNombre(), float.Parse(perfilvitalidad.GetMetaValor()));
+                            break;
+                        case VitalidadTipo.SETMETA:
+                            efecto = -1;
+                            SolicitarVitalidadEvento(new VitalidadInformacion(perfilvitalidad, 
+                                    efecto,
+                                    entidad,
+                                    VitalidadEventoTipo.PREEFECTO));                             
+                            GetEntidad().SetMetadato(perfilvitalidad.GetMetaNombre(), perfilvitalidad.GetMetaValor());
+                            break;
+                        case VitalidadTipo.MODMETAATAQUE:
+                            efecto *= perfilvitalidad.GetMetaMultiplicador();
+                            SolicitarVitalidadEvento(new VitalidadInformacion(perfilvitalidad, 
+                                efecto,
+                                entidad,
+                                VitalidadEventoTipo.PREEFECTO)); 
+                            GetEntidad().ModMetadato(perfilvitalidad.GetMetaNombre(), efecto*perfilvitalidad.GetMetaMultiplicador());
+                            break;
+                        case VitalidadTipo.SETMETAATAQUE:
+                            efecto *= perfilvitalidad.GetMetaMultiplicador();
+                            SolicitarVitalidadEvento(new VitalidadInformacion(perfilvitalidad, 
+                                efecto,
+                                entidad,
+                                VitalidadEventoTipo.PREEFECTO)); 
+                            GetEntidad().SetMetadato(perfilvitalidad.GetMetaNombre(), (efecto*perfilvitalidad.GetMetaMultiplicador()).ToString());
+                            break;
+                        }
+                        eventoefecto.Invoke();
+                    }
                     else
-                        daño = 0;
+                        efecto = 0;
 
                     SolicitarVitalidadEvento(new VitalidadInformacion(perfilvitalidad, 
-                        daño,
+                        efecto,
                         entidad,
-                        VitalidadEventoTipo.DAÑO));                                    
+                        VitalidadEventoTipo.EFECTO));                                    
 
                 }
                     
@@ -191,11 +251,11 @@ namespace Aventuras{
         public void ModReduccionDaño(float reduccion){
             perfilvitalidad.ModReduccionDaño(reduccion);
         }
-
-
+            
         public PerfilVitalidad GetPerfilVitalidad(){
             return perfilvitalidad;
         }
+            
 
     }
 

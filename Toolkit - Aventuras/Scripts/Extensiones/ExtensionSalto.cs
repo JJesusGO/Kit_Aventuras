@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
 using System.Collections;
 
 namespace Aventuras{
 
-
+    [RequireComponent(typeof(Entidad))]
     public class ExtensionSalto : Extension{
 
         [Header("Variables")]
@@ -16,13 +17,22 @@ namespace Aventuras{
         private Tecla salto = new Tecla("Salto");
         [SerializeField]
         private Colision deteccionpiso = null;
+        [Header("Eventos")]
+        [SerializeField]
+        private UnityEvent eventosalto = new UnityEvent();
+        [SerializeField]
+        private UnityEvent eventopiso  = new UnityEvent();
 
         private int saltos = 0; 
         private bool estadopiso = false;
 
+        private Entidad entidad = null;
+
         protected override void Awake(){
             base.Awake();
-            if (GetEntidad().GetModuloMovimiento() == null)
+            entidad = GetComponent<Entidad>();
+
+            if (entidad.GetModuloMovimiento() == null)
                 Debug.LogError("La entidad debe tener el modulo de movimiento.");
             if (deteccionpiso != null)
                 deteccionpiso.AddColisionEvento(EventoPiso);
@@ -30,10 +40,11 @@ namespace Aventuras{
 
         private void Update(){
 
-            if (GetEntidad().GetModuloMovimiento() == null)
+            if (entidad.GetModuloMovimiento() == null)
                 return;
             if (salto.IsClickDown() && (saltos < saltosdisponibles)){
-                GetEntidad().GetModuloMovimiento().Impulso(new Vector3(0, impulso, 0));  
+                eventosalto.Invoke();
+                entidad.GetModuloMovimiento().Impulso(new Vector3(0, impulso, 0));  
                 saltos++;
             }
 
@@ -41,8 +52,10 @@ namespace Aventuras{
 
         private void EventoPiso(ColisionInformacion info){        
             if (info.GetColisionTipo() == ColisionTipo.TRIGGER){
-                if (info.GetColisionEstado() == ColisionEstado.ENTER)
+                if (info.GetColisionEstado() == ColisionEstado.ENTER){
                     saltos = 0;
+                    eventopiso.Invoke();
+                }
                 estadopiso = info.GetColisionEstado() == ColisionEstado.ENTER;            
             }
         }

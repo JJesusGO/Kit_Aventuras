@@ -46,7 +46,7 @@ namespace Aventuras{
             return enable;
         }
             
-        public void EventoSetEnable(bool enable){
+        public void AccionSetEnable(bool enable){
             this.enable = enable;
         }
 

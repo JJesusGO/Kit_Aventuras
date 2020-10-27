@@ -9,25 +9,18 @@ namespace Aventuras{
         [SerializeField]
         private EntidadTipo tipoproyectil = EntidadTipo.DESCONOCIDO;
         [SerializeField]
-        protected ModuloAtaque ataque = new ModuloAtaque(); 
+        private ModuloMovimiento movimiento = new ModuloMovimiento();
 
         protected override void Awake(){
             base.Awake();
+            AddModulo(movimiento);
             SetTipo(tipoproyectil);
-            AddModulo(ataque);
         }
      
         public abstract void Disparar(Vector3 direccion);
 
-        public void AddAtaqueEvento(AtaqueEvento evento){
-            ataque.AddAtaqueEvento(evento);
-        }
-        public void RemoveAtaqueEvento(AtaqueEvento evento){
-            ataque.RemoveAtaqueEvento(evento);
-        }
-
-        public override ModuloAtaque GetModuloAtaque(){
-            return ataque;
+        public override ModuloMovimiento GetModuloMovimiento(){
+            return movimiento;
         }
 
     }

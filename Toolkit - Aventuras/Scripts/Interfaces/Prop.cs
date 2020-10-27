@@ -7,7 +7,7 @@ namespace Aventuras{
 
         protected override void Awake(){
             base.Awake();
-            SetTipo(EntidadTipo.DESCONOCIDO);
+            SetTipo(EntidadTipo.OBJETO);
         }
 
     }

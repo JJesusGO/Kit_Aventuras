@@ -3,12 +3,12 @@ using System.Collections;
 
 namespace Aventuras{
 
-    public abstract class Extension : MonoBehaviour{
+    public class ItemSencillo : Item{
 
-        protected virtual void Awake(){
+        public override void Generacion(){
             
         }
-    
+
     }
 
 }
