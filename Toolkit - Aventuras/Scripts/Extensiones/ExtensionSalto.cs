@@ -60,6 +60,13 @@ namespace Aventuras{
             }
         }
 
+        public void AccionSetSaltosDisponibles(int saltos) {
+            this.saltosdisponibles = saltos;        
+        }
+        public void AccionModSaltosDisponibles(int saltos){
+            this.saltosdisponibles += saltos;
+        }
+
     }
 
 }

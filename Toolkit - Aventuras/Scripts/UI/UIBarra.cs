@@ -117,10 +117,19 @@ namespace Aventuras{
     }
 
     public class UIBarra : MonoBehaviour{
-
+        
+        [Header("Metadato")]
+        [SerializeField]
+        private Entidad entidad = null;
+        [SerializeField]
+        private CondicionTipo variable = CondicionTipo.VIDA;
+        [SerializeField]
+        private string metanombre = "";
         [Header("General")]
         [SerializeField]
         private UIBarraTipo tipo = UIBarraTipo.NIVEL;
+        [SerializeField]
+        private float escalado = 1.0f;
         [Header("Nivel")]
         [SerializeField]
         private UIBarraNivel []uibarras = null;
@@ -129,19 +138,42 @@ namespace Aventuras{
         private UIBarraSecciones []uisecciones = null;
 
         private float valor = 0;
-
-
-        public void  SetValor(float valor){
-            if (this.valor == valor)
-                return;
-            this.valor = Mathf.Clamp(valor,0,1);
+        private void Start(){
+            SetUIValor();
         }
-        public void  SetUIValor(float valor){
-            SetValor(valor);
+
+        public void  SetValor(){
+            float valor = 0;
+
+            if (entidad != null)
+            {
+                switch (variable)
+                {
+                    case CondicionTipo.ATAQUE:
+                        if (entidad.GetModuloAtaque() != null)
+                            valor = entidad.GetModuloAtaque().GetAtaqueBase();                        
+                        break;
+                    case CondicionTipo.VIDA:
+                        if (entidad.GetModuloVitalidad() != null)
+                            valor = entidad.GetModuloVitalidad().GetPerfilVitalidad().GetVida(true);                                                
+                        break;
+                    case CondicionTipo.METADATO:
+                        valor = float.Parse(entidad.GetMetadato(metanombre));
+                        break;
+                }
+            }
+            else if(variable == CondicionTipo.METADATO)
+                valor = float.Parse(ManagerGameplay.GetInstancia().GetMetadato(metanombre));
+            
+            this.valor = Mathf.Clamp(valor/escalado,0,1);
+        }
+        public void  SetUIValor(){
+            SetValor();
             Actualizar(true);
         }
 
         private void Update(){
+            SetValor();
             Actualizar();
         }
 
@@ -156,7 +188,7 @@ namespace Aventuras{
 
                     for (int i = 0; i < uibarras.Length; i++){
                         if (uibarras[i].GetBarra().fillAmount != valor){
-                            if (forzar)
+                            if (forzar  ||  uibarras[i].GetVelocidad() <= 0)
                                 uibarras[i].GetBarra().fillAmount = valor;
                             else
                                 uibarras[i].GetBarra().fillAmount = Mathf.MoveTowards(uibarras[i].GetBarra().fillAmount, valor, uibarras[i].GetVelocidad() * Time.deltaTime);
@@ -169,7 +201,7 @@ namespace Aventuras{
 
                     for (int i = 0; i < uisecciones.Length; i++){
                         if (uisecciones[i].GetValor() != valor){
-                            if (forzar)
+                            if (forzar || uisecciones[i].GetVelocidad() <= 0)
                                 uisecciones[i].SetValor(valor);
                             else
                                 uisecciones[i].SetValor(Mathf.MoveTowards(uisecciones[i].GetValor(), valor, uisecciones[i].GetVelocidad() * Time.deltaTime));

@@ -34,6 +34,7 @@ namespace Aventuras{
         private   bool        muerto = false;
 
         private ExtensionEventosEntidad eventos = null;
+        private Vector3 direccionoriginal = Vector3.zero;
 
         public Entidad Create(Transform padre,Vector3 posicion){            
             Entidad instancia = GameObject.Instantiate(gameObject,posicion,Quaternion.identity,padre).GetComponent<Entidad>();
@@ -51,6 +52,15 @@ namespace Aventuras{
             cuerporigido = GetComponent<Rigidbody>();
             animador     = GetComponentInChildren<Animador>();
             eventos = GetComponentInChildren<ExtensionEventosEntidad>();
+
+            direccionoriginal = transform.forward;
+            direccionoriginal.y = 0;
+            direccionoriginal = direccionoriginal.normalized;
+
+            if (GetModuloMovimiento() != null){
+                transform.rotation = Quaternion.identity;
+                GetModuloMovimiento().SetDireccion(direccionoriginal);
+            }
         }
         protected virtual void Start(){
             for (int i = 0; i < modulos.Count; i++)
@@ -105,12 +115,11 @@ namespace Aventuras{
         public virtual  void Revivir(){
             if (!IsMuerto())
                 return;
-
             if (GetModuloVitalidad() != null)
                 GetModuloVitalidad().GetPerfilVitalidad().ResetVida();
             if (GetModuloMovimiento() != null)
                 GetModuloMovimiento().Detener();
-            SetMuerto(true);
+            SetMuerto(false);
             if (eventos != null)
                 eventos.EntidadEvento(EventoEntidad.VIVIR);            
         }
@@ -130,17 +139,9 @@ namespace Aventuras{
             this.tipo = tipo;
         }
         public    void     SetPosicion(Vector3 posicion){
-            if (GetRigidbody() != null)
-                GetRigidbody().position = posicion;
-            else
                 transform.position = posicion;
         }
-        public    void     SetPosicion(Vector2 posicion){
-            if (GetRigidbody() != null)
-                GetRigidbody().position = new Vector3(posicion.x,posicion.y,GetRigidbody().position.z);
-            else
-                transform.position = new Vector3(posicion.x,posicion.y,transform.position.z);;
-        }
+  
         public    void     SetMetadato(string nombre,string valor){
             for (int i = 0; i < metadatos.Length; i++){
                 if (metadatos[i].IsNombre(nombre))
@@ -167,6 +168,17 @@ namespace Aventuras{
         }
         public Vector3          GetPosicion(){
             return transform.position;
+        }
+        public Vector3 GetDistanciaEspacial(Entidad entidad){
+            return (GetPosicion() - entidad.GetPosicion());
+        }
+        public Vector3 GetDistanciaPlano(Entidad entidad){
+            Vector3 distancia = GetDistanciaEspacial(entidad);
+            distancia.y = 0;
+            return distancia;
+        }
+        public Vector3 GetDireccionOriginal(){
+            return direccionoriginal;
         }
 
         public string           GetMetadato(string nombre){
@@ -280,6 +292,20 @@ namespace Aventuras{
                 return;
             GetModuloVitalidad().GetPerfilVitalidad().ModVidaMaxima(vida);
         }
+
+
+        public void AccionSetReduccionDaño(float reduccion){
+            if (GetModuloVitalidad() == null)
+                return;
+            GetModuloVitalidad().GetPerfilVitalidad().SetReduccionDaño(reduccion);
+        }
+       public void AccionModVReduccionDaño(float reduccion){
+            if (GetModuloVitalidad() == null)
+                return;
+            GetModuloVitalidad().GetPerfilVitalidad().ModReduccionDaño(reduccion);
+        }
+
+
 
 
     }

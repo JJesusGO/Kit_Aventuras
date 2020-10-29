@@ -37,11 +37,8 @@ namespace Aventuras{
     }
 
     public class Jugador : Aliado{
-
-        [SerializeField]
-        private ModuloMovimiento movimiento = new ModuloMovimiento();
-        [SerializeField]
-        private ModuloVitalidad vitalidad = new ModuloVitalidad();
+          
+        [Header("Jugador")]
         [SerializeField]
         private ModuloAtaque    ataque = new ModuloAtaque();
         [Header("Configuración")]
@@ -61,9 +58,7 @@ namespace Aventuras{
 
         protected override void Awake(){
             base.Awake();
-            AddModulo(movimiento);
             AddModulo(ataque);
-            AddModulo(vitalidad);
         }
         protected override void Update(){
             base.Update();
@@ -84,12 +79,10 @@ namespace Aventuras{
         }
 
         public override void Revivir(){
-            base.Revivir();
-            if (!IsMuerto())
-                return;
             MapaSpawn spawn = Mapa.GetInstancia().GetSpawn();
             if (spawn != null)
                 SetPosicion(spawn.GetPosicion());
+            base.Revivir();           
         }
         public override void Generacion(){
             
@@ -108,14 +101,8 @@ namespace Aventuras{
                         habilidades[i].ToogleEnable();
         }
             
-        public override ModuloMovimiento GetModuloMovimiento(){
-            return movimiento;
-        }
         public override ModuloAtaque     GetModuloAtaque(){
             return ataque;
-        }
-        public override ModuloVitalidad  GetModuloVitalidad(){
-            return vitalidad;
         }
 
         public void AccionSetHabilidadEnable(string comando){

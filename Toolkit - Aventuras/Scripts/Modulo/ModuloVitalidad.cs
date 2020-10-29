@@ -53,6 +53,10 @@ namespace Aventuras{
         private float vida = 100.0f;
         [SerializeField]
         private float vidamaxima = 100.0f;
+        [Header("Seccion - Daño")]
+        [Range(0.0f,1.0f)]
+        [SerializeField]
+        private float reducciondaño = 0.0f;
         [Header("Seccion - Meta")]
         [SerializeField]
         private string metanombre = "Desconocido";
@@ -60,10 +64,6 @@ namespace Aventuras{
         private string metavalor = "-1";
         [SerializeField]
         private float metamultiplicador = 1.0f;
-        [Header("Seccion - Daño")]
-        [Range(0.0f,1.0f)]
-        [SerializeField]
-        private float reducciondaño = 0.0f;
         [Header("Seccion - Cargas")]
         [SerializeField]
         private int cargasporimpacto = 1;

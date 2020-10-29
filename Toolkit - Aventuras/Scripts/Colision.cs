@@ -66,9 +66,6 @@ namespace Aventuras{
     [RequireComponent(typeof(Collider))]
     public class Colision : MonoBehaviour{
 
-        [SerializeField]
-        private string nombre = "Desconocido";
-
         private event ColisionEvento colisionevento = null;
         private Entidad                entidadpadre = null;
         private ColisionTipo         colisiontipo   = ColisionTipo.TRIGGER;
@@ -198,10 +195,7 @@ namespace Aventuras{
         }
         public ColisionTipo         GetColisionTipo(){
             return colisiontipo;
-        }
-        public string               GetNombre() {
-            return nombre;
-        }
+        }   
 
     }
 

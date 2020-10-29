@@ -8,7 +8,7 @@ namespace Aventuras{
     public delegate void AtaqueEvento(AtaqueInformacion info,ModuloAtaque ataque);
 
     public enum   AtaqueObjetivo{
-        ALIADO, ENEMIGO, AMBOS
+        ALIADO, ENEMIGO, AMBOS, OBJETO, TODOS
     }
     public struct AtaqueInformacion{
        
@@ -120,6 +120,23 @@ namespace Aventuras{
             return objetivo;
         }
 
+        public bool IsEntidadFiltrada(Entidad entidad){
+            switch (GetObjetivo()){
+                case  AtaqueObjetivo.ALIADO:
+                    return entidad.GetTipo() == EntidadTipo.ALIADO;
+                case  AtaqueObjetivo.ENEMIGO:
+                    return entidad.GetTipo() == EntidadTipo.ENEMIGO;
+                case  AtaqueObjetivo.AMBOS:
+                    return entidad.GetTipo() == EntidadTipo.ALIADO   || entidad.GetTipo() == EntidadTipo.ENEMIGO;
+                case  AtaqueObjetivo.OBJETO:
+                    return entidad.GetTipo() == EntidadTipo.OBJETO;
+                case  AtaqueObjetivo.TODOS:
+                    return entidad.GetTipo() != EntidadTipo.DESCONOCIDO;
+            }
+            return false;
+        }
+
+
         private void EventoColision(ColisionInformacion info){
 
             if (!IsEnable())
@@ -131,10 +148,12 @@ namespace Aventuras{
             ModuloVitalidad vitalidad = entidad.GetModuloVitalidad();
             if (vitalidad == null)
                 return;
+            if (!vitalidad.GetPerfilVitalidad().IsColision(info.GetColisionImpacto()))
+                return;
             PerfilAtaque perfil = GetPerfil(info.GetColision());
             if (perfil == null)
                 return;
-                         
+                     
             switch(GetObjetivo()){
                 case AtaqueObjetivo.ALIADO:
 
@@ -152,7 +171,6 @@ namespace Aventuras{
                 case AtaqueObjetivo.ENEMIGO:
 
                     if (entidad.GetTipo() == EntidadTipo.ENEMIGO){
-                        Debug.Log("ATAQUE");
                         SolicitarEvento(new AtaqueInformacion(
                             perfil,
                             GetAtaque(perfil),
@@ -165,8 +183,40 @@ namespace Aventuras{
                     break;
                 case AtaqueObjetivo.AMBOS:
 
+                    if (entidad.GetTipo() == EntidadTipo.ALIADO ||
+                        entidad.GetTipo() == EntidadTipo.ENEMIGO)
+                    {
+                        SolicitarEvento(new AtaqueInformacion(
+                            perfil,
+                            GetAtaque(perfil),
+                            GetEntidad(),
+                            entidad
+                        ));
+                        vitalidad.AddDanio(GetAtaque(perfil),entidad, info.GetColisionImpacto());
+
+                    }
+
+                    break;
+                case AtaqueObjetivo.OBJETO:
+
+                    if (entidad.GetTipo() == EntidadTipo.OBJETO)
+                    {
+                        SolicitarEvento(new AtaqueInformacion(
+                            perfil,
+                            GetAtaque(perfil),
+                            GetEntidad(),
+                            entidad
+                        ));
+                        vitalidad.AddDanio(GetAtaque(perfil),entidad, info.GetColisionImpacto());
+
+                    }
+
+                    break;
+                case AtaqueObjetivo.TODOS:
+
                     if (entidad.GetTipo() != EntidadTipo.DESCONOCIDO)
                     {
+                        
                         SolicitarEvento(new AtaqueInformacion(
                             perfil,
                             GetAtaque(perfil),
