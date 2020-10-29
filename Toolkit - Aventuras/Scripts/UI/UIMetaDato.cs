@@ -13,6 +13,7 @@ namespace Aventuras{
         [SerializeField]
         private string formato = "{0}";
         [Header("Entidad")]
+        [SerializeField]
         private Entidad entidad = null;
 
         private TextMeshProUGUI uitexto = null;
