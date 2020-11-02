@@ -15,6 +15,7 @@ namespace Aventuras{
         [SerializeField]
         private ModuloVitalidad vitalidad = new ModuloVitalidad();
         [Header("Variables - Aliado")]
+        [Tooltip("Deprecated")]
         [SerializeField]
         private bool target = true;
 

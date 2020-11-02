@@ -27,6 +27,8 @@ namespace Aventuras{
 
         public override void Start(){
             gameplay = ManagerGameplay.GetInstancia();
+            if (velocidad <= 0)
+                velocidad = 0.0001f;
             SetVelocidad(velocidad);
         }
         public override void Update(){

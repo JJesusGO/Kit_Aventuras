@@ -33,11 +33,11 @@ namespace Aventuras{
             this.multiplicador += multiplicador;
         }
 
-        private void SetEnable(bool enable){
+        public void SetEnable(bool enable){
             this.enable = enable;
             if (colisiones != null)
                 for (int i = 0; i < colisiones.Length; i++)
-                    colisiones[i].gameObject.SetActive(enable);
+                    colisiones[i].GetComponent<Collider>().enabled = enable;
         }
         private void ToogleEnable(){
             this.enable = !this.enable;
